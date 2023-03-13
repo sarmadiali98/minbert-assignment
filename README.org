@@ -9,7 +9,7 @@ In this assignment, you will implement some important components of the BERT mod
 - Follow =setup.sh= to properly setup the environment and install dependencies. You need a Unix system with [[https://docs.conda.io/en/main/miniconda.html][conda]] installed. Windows might also work if you adapt the commands yourself, but it is disrecommended.
 - There is a detailed description of the code structure in [[./structure.md][structure.md]], including a description of which parts you will need to implement.
 - You are only allowed to use libraries that are installed by =setup.sh=, no other external libraries are allowed (e.g., =transformers=).
-  - You can use your own judgement to add libraries such as =icecream=, =IPython=, etc. that do not invalidate the exercise's spirit.
+  # - You can use your own judgement to add libraries such as =icecream=, =IPython=, etc. that do not invalidate the exercise's spirit.
 - We will run your code with the following commands, so make sure that whatever your best results are reproducible using these commands:
   - Do not change any of the existing command options (including defaults) or add any new required parameters.
   - You can add =--use_gpu= if you have access to a CUDA gpu.
