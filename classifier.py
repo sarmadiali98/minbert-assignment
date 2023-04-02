@@ -37,13 +37,17 @@ class BertSentClassifier(torch.nn.Module):
             elif config.option == 'finetune':
                 param.requires_grad = True
 
-        # todo
+        self.classifier = torch.nn.Linear(config.hidden_size, self.num_labels)
+
         #raise NotImplementedError
 
     def forward(self, input_ids, attention_mask):
-        # todo
-        # the final bert contextualize embedding is the hidden state of [CLS] token (the first token)
-        #raise NotImplementedError
+        outputs = self.bert(input_ids, attention_mask)
+        last_hidden_state = outputs["last_hidden_state"]
+        pooled_output = outputs["pooler_output"]
+        logits = self.classifier(pooled_output)
+
+        return logits
 
 # create a custom Dataset Class to be used for the dataloader
 class BertDataset(Dataset):
