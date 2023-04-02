@@ -47,7 +47,7 @@ class BertSelfAttention(nn.Module):
     # multiply the attention scores to the value and get back V' 
 
     # next, we need to concat multi-heads and recover the original shape [bs, seq_len, num_attention_heads * attention_head_size = hidden_size]
-    raise NotImplementedError
+    #raise NotImplementedError
 
   def forward(self, hidden_states, attention_mask):
     """
@@ -177,7 +177,7 @@ class BertModel(BertPreTrainedModel):
     embeds = self.embed_layer_norm(embeds)
     embeds = self.embed_dropout(embeds)
 
-    raise NotImplementedError
+    #raise NotImplementedError
 
   def encode(self, hidden_states, attention_mask):
     """
