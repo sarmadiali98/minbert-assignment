@@ -35,26 +35,32 @@ class BertSelfAttention(nn.Module):
     return proj
 
   def attention(self, key, query, value, attention_mask):
-    # each attention is calculated following eq (1) of https://arxiv.org/pdf/1706.03762.pdf
-    # attention scores are calculated by multiply query and key 
-    # and get back a score matrix S of [bs, num_attention_heads, seq_len, seq_len]
-    # S[*, i, j, k] represents the (unnormalized)attention score between the j-th and k-th token, given by i-th attention head
-    # before normalizing the scores, use the attention mask to mask out the padding token scores
-    # Note again: in the attention_mask non-padding tokens with 0 and padding tokens with a large negative number 
+    
+    # calculate unnormalized attention scores
+    scores = torch.matmul(query, key.transpose(-1, -2))
 
-    # normalize the scores
+
+    # apply attention mask to scores
+    attention_mask = attention_mask.to(dtype=scores.dtype)  # cast attention mask to same dtype as scores
+    attention_mask = (1.0 - attention_mask) * -10000.0  # apply the mask by multiplying a large negative number
+    scores += attention_mask
+
+    #normalize the scores using softmax
+    attention_probs = nn.Softmax(dim=-1)(scores)
+    attention_probs = self.dropout(attention_probs)
 
     # multiply the attention scores to the value and get back V' 
+    context = torch.matmul(attention_probs, value)
 
     # next, we need to concat multi-heads and recover the original shape [bs, seq_len, num_attention_heads * attention_head_size = hidden_size]
+    context = context.transpose(1, 2).contiguous().view(bs, -1, self.all_head_size)
+
+    return context
+    
     #raise NotImplementedError
 
   def forward(self, hidden_states, attention_mask):
-    """
-    hidden_states: [bs, seq_len, hidden_state]
-    attention_mask: [bs, 1, 1, seq_len]
-    output: [bs, seq_len, hidden_state]
-    """
+    
     # first, we have to generate the key, value, query for each token for multi-head attention w/ transform (more details inside the function)
     # of *_layers are of [bs, num_attention_heads, seq_len, attention_head_size]
     key_layer = self.transform(hidden_states, self.key)
@@ -83,14 +89,7 @@ class BertLayer(nn.Module):
     self.out_dropout = nn.Dropout(config.hidden_dropout_prob)
 
   def add_norm(self, input, output, dense_layer, dropout, ln_layer):
-    """
-    this function is applied after the multi-head attention layer or the feed forward layer
-    input: the input of the previous layer
-    output: the output of the previous layer
-    dense_layer: used to transform the output
-    dropout: the dropout to be applied 
-    ln_layer: the layer norm to be applied
-    """
+    
     # add input and output
     added_output = input + output
     # apply layer norm
@@ -102,15 +101,7 @@ class BertLayer(nn.Module):
     return output_with_dense
 
   def forward(self, hidden_states, attention_mask):
-    """
-    hidden_states: either from the embedding layer (first bert layer) or from the previous bert layer
-    as shown in the left of Figure 1 of https://arxiv.org/pdf/1706.03762.pdf 
-    each block consists of 
-    1. a multi-head attention layer (BertSelfAttention)
-    2. a add-norm that takes the input and output of the multi-head attention layer
-    3. a feed forward layer
-    4. a add-norm that takes the input and output of the feed forward layer
-    """
+    
     # multi-head attention w/ self.self_attention
     self_attention_output = self.self_attention(hidden_states, attention_mask)
     # add-norm layer
@@ -123,13 +114,7 @@ class BertLayer(nn.Module):
 
 
 class BertModel(BertPreTrainedModel):
-  """
-  the bert model returns the final embeddings for each token in a sentence
-  it consists
-  1. embedding (used in self.embed)
-  2. a stack of n bert layers (used in self.encode)
-  3. a linear transformation layer for [CLS] token (used in self.forward, as given)
-  """
+  
   def __init__(self, config):
     super().__init__(config)
     self.config = config
@@ -180,10 +165,7 @@ class BertModel(BertPreTrainedModel):
     #raise NotImplementedError
 
   def encode(self, hidden_states, attention_mask):
-    """
-    hidden_states: the output from the embedding layer [batch_size, seq_len, hidden_size]
-    attention_mask: [batch_size, seq_len]
-    """
+    
     # get the extended attention mask for self attention
     # returns extended_attention_mask of [batch_size, 1, 1, seq_len]
     # non-padding tokens with 0 and padding tokens with a large negative number 
@@ -197,10 +179,7 @@ class BertModel(BertPreTrainedModel):
     return hidden_states
 
   def forward(self, input_ids, attention_mask):
-    """
-    input_ids: [batch_size, seq_len], seq_len is the max length of the batch
-    attention_mask: same size as input_ids, 1 represents non-padding tokens, 0 represents padding tokens
-    """
+    
     # get the embedding for each input token
     embedding_output = self.embed(input_ids=input_ids)
 
