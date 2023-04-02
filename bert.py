@@ -91,8 +91,15 @@ class BertLayer(nn.Module):
     dropout: the dropout to be applied 
     ln_layer: the layer norm to be applied
     """
-    # todo
-    raise NotImplementedError
+    # add input and output
+    added_output = input + output
+    # apply layer norm
+    normalized_output = ln_layer(added_output)
+    # apply dropout
+    output_with_dropout = dropout(normalized_output)
+    # apply dense layer
+    output_with_dense = dense_layer(output_with_dropout)
+    return output_with_dense
 
   def forward(self, hidden_states, attention_mask):
     """
@@ -104,17 +111,15 @@ class BertLayer(nn.Module):
     3. a feed forward layer
     4. a add-norm that takes the input and output of the feed forward layer
     """
-    # todo
     # multi-head attention w/ self.self_attention
-
+    self_attention_output = self.self_attention(hidden_states, attention_mask)
     # add-norm layer
-
+    added_output = self.add_norm(hidden_states, self_attention_output, self.attention_dense, self.attention_dropout, self.attention_layer_norm)
     # feed forward
-
+    interm_output = self.interm_af(self.interm_dense(added_output))
     # another add-norm layer
-
-
-    raise NotImplementedError
+    final_output = self.add_norm(added_output, interm_output, self.out_dense, self.out_dropout, self.out_layer_norm)
+    return final_output
 
 
 class BertModel(BertPreTrainedModel):
@@ -154,12 +159,12 @@ class BertModel(BertPreTrainedModel):
 
     # get word embedding from self.word_embedding
     # todo
-    inputs_embeds = None
+    inputs_embeds = self.word_embedding(input_ids)
 
 
     # get position index and position embedding from self.pos_embedding
     pos_ids = self.position_ids[:, :seq_length]
-    pos_embeds = None
+    pos_embeds = self.pos_embedding(pos_ids)
 
     # get token type ids, since we are not consider token type, just a placeholder
     tk_type_ids = torch.zeros(input_shape, dtype=torch.long, device=input_ids.device)
