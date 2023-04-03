@@ -17,7 +17,7 @@ In this assignment, you will implement some important components of the BERT mod
 #+begin_example
 mkdir -p my_output
 
-python3 classifier.py --option pretrain --seed 43 --epochs NUM_EPOCHS --lr LR --train data/sst-train.txt --dev data/sst-dev.txt --test data/sst-test.txt --dev_out my_output/pretrain-sst-dev-out.txt --test_out my_output/pretrain-sst-test-out.txt
+python3 classifier.py --option pretrain --seed 43 --epochs 4 --lr 0.00000000001 --train data/sst-train.txt --dev data/sst-dev.txt --test data/sst-test.txt --dev_out my_output/pretrain-sst-dev-out.txt --test_out my_output/pretrain-sst-test-out.txt
 
 python3 classifier.py --option finetune --seed 43 --epochs NUM_EPOCHS --lr LR --train data/sst-train.txt --dev data/sst-dev.txt --test data/sst-test.txt --dev_out my_output/finetune-sst-dev-out.txt --test_out my_output/finetune-sst-test-out.txt
 
