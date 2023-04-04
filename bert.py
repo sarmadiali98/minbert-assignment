@@ -18,15 +18,12 @@ class BertSelfAttention(nn.Module):
     # initialize the linear transformation layers for key, value, query
     self.query = nn.Linear(config.hidden_size, self.all_head_size)
     self.key = nn.Linear(config.hidden_size, self.all_head_size)
-    print(type(self.key))
     self.value = nn.Linear(config.hidden_size, self.all_head_size)
     # this dropout is applied to normalized attention scores following the original implementation of transformer
     # although it is a bit unusual, we empirically observe that it yields better performance
     self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
 
   def transform(self, x, linear_layer):
-    if x is None or x.numel() == 0:  # check for empty tensor
-        return x
     # the corresponding linear_layer of k, v, q are used to project the hidden_state (x)
     bs, seq_len = x.shape[:2]
     proj = linear_layer(x)
@@ -186,6 +183,8 @@ class BertModel(BertPreTrainedModel):
     # layer norm and dropout
     embeds = self.embed_layer_norm(embeds)
     embeds = self.embed_dropout(embeds)
+
+    return embeds
 
   def encode(self, hidden_states, attention_mask):
     """

@@ -67,7 +67,7 @@ class AdamW(Optimizer):
                     exp_avg_hat = exp_avg / bias_correction1
                 else:
                     exp_avg_hat = exp_avg
-                denom = (exp_avg_sq.sqrt() / torch.sqrt(bias_correction)).add_(eps)
+                denom = (exp_avg_sq.sqrt() / torch.sqrt(torch.tensor(bias_correction)).add_(eps)
 
                 # Update the parameters
                 if weight_decay != 0:
